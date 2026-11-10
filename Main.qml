@@ -5,12 +5,14 @@ import QtQuick.Controls.Basic
 ApplicationWindow {
     id: window
     width: 400
-    height: 450
+    height: 650
     visible: true
     title: qsTr("JSON Rehber")
 
     ColumnLayout {               // elemanları alt alta dizer
-        anchors.centerIn: parent // pencerenin ortasına koyar
+        anchors.top: parent.top                      // ← centerIn yerine bu üçü
+               anchors.topMargin: 20
+               anchors.horizontalCenter: parent.horizontalCenter
         width: 280               // tüm formun genişliği
         spacing: 12              // elemanlar arası boşluk
 
@@ -56,6 +58,7 @@ ApplicationWindow {
                 if (sonuc === 0) {
                     durumText.text = adField.text + " kaydedildi"
                     durumText.color = "green"
+                    kisiListesi.model = kaydedici.kisileriGetir()  //ekranın hep yenilenmesini sağlayacak
 
                     // başarılıysa kutuları temizle
                     adField.text = ""
@@ -78,6 +81,79 @@ ApplicationWindow {
             text: ""
             Layout.alignment: Qt.AlignHCenter
         }
+        Label {
+                   text: "Kayıtlı Kişiler"
+                   font.pixelSize: 16
+                   font.bold: true
+                   Layout.topMargin: 10
+               }
+
+               ListView {
+                   id: kisiListesi
+                   Layout.fillWidth: true
+                   Layout.preferredHeight: 250        // listenin yüksekliği
+                   clip: true                         // taşan satırları gizle
+                   spacing: 6
+                   model: kaydedici.kisileriGetir()   // ← veriyi C++'tan al
+
+                   delegate: Rectangle {              // ← her satırın kalıbı
+                       width: kisiListesi.width
+                       height: 50
+                       radius: 6
+                       color: "#f0f0f0"
+
+                       Column {
+                           anchors.verticalCenter: parent.verticalCenter
+                           anchors.left: parent.left
+                           anchors.leftMargin: 10
+
+                           Text {
+                               text: (index + 1) + ". " + modelData.ad
+                               font.bold: true
+                           }
+                           Text {
+                               text: modelData.telefon + "  •  " + modelData.yas + " yaş"
+                               color: "gray"
+                           }
+                       }
+                       Button {
+                           id: silButton
+                           text: "Sil"
+                           anchors.right: parent.right
+                           anchors.rightMargin: 8
+                           anchors.verticalCenter: parent.verticalCenter
+
+                           // Butonun içindeki yazı
+                           contentItem: Text {
+                               text: silButton.text
+                               color: silButton.hovered ? "white" : "#c42b1c"   // üstteyken beyaz, değilken koyu kırmızı
+                               font.bold: true
+                               horizontalAlignment: Text.AlignHCenter
+                               verticalAlignment: Text.AlignVCenter
+                           }
+
+                           // Butonun arka planı
+                           background: Rectangle {
+                               implicitWidth: 60
+                               implicitHeight: 32
+                               radius: 6
+                               color: silButton.pressed ? "#c50f1f"            // basılıyken daha koyu kırmızı
+                                    : silButton.hovered ? "#e81123"            // üstteyken Windows kırmızısı
+                                    : "transparent"                            // normalde şeffaf
+
+
+                           }
+
+                           onClicked: {
+                               if (kaydedici.sil(modelData.telefon)) {
+                                   durumText.text = modelData.ad + " silindi"
+                                   durumText.color = "gray"
+                                   kisiListesi.model = kaydedici.kisileriGetir()
+                               }
+                           }
+                       }
+                   }
+               }
 
     }   // ColumnLayout kapanışı
 }       // ApplicationWindow kapanışı
